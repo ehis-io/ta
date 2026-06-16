@@ -1,0 +1,21 @@
+# Render deployment blueprint for the Creator Card microservice.
+# The MongoDB connection string is supplied via the dashboard / env group as a
+# secret (MongoDB Atlas free tier). No auth, no URL versioning - endpoints live
+# at the root of the base URL: POST /creator-cards, GET /creator-cards/:slug,
+# DELETE /creator-cards/:slug.
+services:
+  - type: web
+    name: creator-card-service
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node bootstrap.js
+    envVars:
+      - key: NODE_VERSION
+        value: 18.19.1
+      - key: PORT
+        value: 3000
+      - key: APP_NAME
+        value: CreatorCardService
+      - key: MONGODB_URI
+        sync: false
