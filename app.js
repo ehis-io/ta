@@ -6,11 +6,19 @@ const fs = require('fs');
 const { createServer } = require('@app-core/server');
 const { createConnection } = require('@app-core/mongoose');
 const { createQueue } = require('@app-core/queue');
+const { appLogger } = require('@app-core/logger');
 
 const canLogEndpointInformation = process.env.CAN_LOG_ENDPOINT_INFORMATION;
 
+// Establish the MongoDB connection. createConnection() rejects on failure, so we
+// must catch it here - otherwise the unhandled rejection crashes the Node process
+// (and on a host like Render that produces a restart/crash loop where the service
+// shows "live" but is intermittently unreachable). Keep the HTTP server up so the
+// failure is observable in logs instead of taking the whole app down.
 createConnection({
   uri: process.env.MONGODB_URI,
+}).catch((err) => {
+  appLogger.error({ errMessage: err.message, errStack: err.stack }, 'mongodb-connection-failed');
 });
 
 createQueue();

@@ -1,6 +1,17 @@
 require('dotenv').config();
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
+// Last-resort guards so a transient failure (e.g. a dropped DB connection) is
+// logged instead of terminating the process and triggering a host restart loop.
+process.on('unhandledRejection', (reason) => {
+  // eslint-disable-next-line no-console
+  console.error('unhandledRejection:', reason && reason.message ? reason.message : reason);
+});
+process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
+  console.error('uncaughtException:', err && err.message ? err.message : err);
+});
+
 // Reads a single Secrets Manager secret (JSON or string) and injects into process.env
 async function loadSecretsToEnv({
   secretId,
